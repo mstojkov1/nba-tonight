@@ -1,0 +1,53 @@
+<%- include('partials/header') %>
+
+<h1><%= isToday ? "Tonight's games" : 'Games on ' + date %></h1>
+
+<form action="/" method="GET" class="date-form">
+  <label>Date <input type="date" name="date" value="<%= date %>"></label>
+  <button type="submit" class="btn">Go</button>
+</form>
+
+<% if (error) { %>
+  <p class="errors"><%= error %></p>
+<% } %>
+
+<% if (games.length === 0) { %>
+  <p class="muted">No games on this date.</p>
+<% } %>
+
+<div class="grid">
+  <% games.forEach((g) => { const c = counts[g.id] || { home: 0, visitor: 0 }; %>
+    <article class="card">
+      <p class="status status-<%= g.state %>"><%= g.label %></p>
+
+      <div class="matchup">
+        <div class="team">
+          <span class="name"><%= g.visitor_team.full_name %></span>
+          <span class="score"><%= g.state === 'scheduled' ? '' : g.visitor_team_score %></span>
+        </div>
+        <div class="team">
+          <span class="name"><%= g.home_team.full_name %></span>
+          <span class="score"><%= g.state === 'scheduled' ? '' : g.home_team_score %></span>
+        </div>
+      </div>
+
+      <p class="muted">Community picks: <%= g.visitor_team.abbreviation %> <%= c.visitor %> – <%= c.home %> <%= g.home_team.abbreviation %></p>
+
+      <% if (g.state === 'scheduled') { %>
+        <form action="/picks" method="POST" class="pick-form">
+          <input type="hidden" name="gameId" value="<%= g.id %>">
+          <input type="hidden" name="gameDate" value="<%= date %>">
+          <label class="radio"><input type="radio" name="pickedSide" value="visitor" required> <%= g.visitor_team.abbreviation %></label>
+          <label class="radio"><input type="radio" name="pickedSide" value="home"> <%= g.home_team.abbreviation %></label>
+          <input type="text" name="username" placeholder="Your name" maxlength="30" required>
+          <input type="text" name="note" placeholder="Note (optional)" maxlength="300">
+          <button type="submit" class="btn">Lock in pick</button>
+        </form>
+      <% } else { %>
+        <p class="muted">Picks are closed for this game.</p>
+      <% } %>
+    </article>
+  <% }) %>
+</div>
+
+<%- include('partials/footer') %>
